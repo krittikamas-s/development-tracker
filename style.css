@@ -903,6 +903,21 @@ textarea {
         padding-bottom: env(safe-area-inset-bottom);
     }
 
+    /* Inside @media (max-width: 768px) { ... } */
+
+    .modal-content {
+        width: 100%;
+        /* Full width */
+        height: 100vh;
+        /* Full height */
+        max-height: 100vh;
+        /* Override the 90vh limit */
+        border-radius: 0;
+        /* Remove rounded corners for full-screen feel */
+        padding: 20px;
+        /* Adjust padding for mobile */
+    }
+
 }
 
 .child-link-btn {

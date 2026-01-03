@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Development Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        
+        <div class="mobile-header">
+            <div class="logo-area">
+                <div class="logo-icon">E</div>
+                <span class="logo-text" id="logo-text-mobile">GROWTH</span>
+            </div>
+            <button class="mobile-menu-btn" onclick="toggleMobileSidebar()">☰</button>
+        </div>
+
+        <div id="mobile-overlay" onclick="toggleMobileSidebar()"></div>
+
+        <nav class="sidebar" id="sidebar">
+            <div class="logo-area desktop-logo">
+                <div class="logo-group">
+                    <div class="logo-icon">E</div>
+                    <span class="logo-text" id="logo-text-desktop">GROWTH</span>
+                </div>
+                <button id="sidebarToggle" class="sidebar-toggle" onclick="toggleSidebar()">
+                    <span id="toggleIcon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </span>
+                </button>
+            </div>
+            
+            <ul class="nav-links">
+                <li class="active" onclick="showPage('dashboard')">
+                    <span class="icon">📊</span> <span class="nav-text">Dashboard</span>
+                </li>
+                <li onclick="showPage('skills')">
+                    <span class="icon">🎯</span> <span class="nav-text">Skills Area</span>
+                </li>
+                <li onclick="showPage('profile')">
+                    <span class="icon">👤</span> <span class="nav-text">Personal Data</span>
+                </li>
+            </ul>
+
+            <div class="storage-actions">
+                <button class="btn-outline" onclick="exportData()">
+                    <span class="icon">⬇️</span> <span class="nav-text">Export JSON</span>
+                </button>
+                <input type="file" id="importFile" hidden onchange="importData(event)">
+                <button class="btn-outline" onclick="document.getElementById('importFile').click()">
+                    <span class="icon">⬆️</span> <span class="nav-text">Import JSON</span>
+                </button>
+                
+                <button class="btn-outline btn-reset" onclick="resetToDefault()">
+                    <span class="icon">🔄</span> <span class="nav-text">Reset Data</span>
+                </button>
+            </div>
+        </nav>
+
+        <main class="content">
+            
+            <section id="dashboard" class="page-view">
+                <div class="sticky-header">
+                    <div class="view-header">
+                        <div>
+                            <h1>Growth Strategy</h1>
+                            <span id="motivation-text" class="badge-success">Loading...</span>
+                        </div>
+                        <div class="header-controls">
+                            <select id="dashboardYearSelect" class="year-select" onchange="handleYearChange()">
+                                </select>
+                            
+                            <div class="timeline-filters">
+                                <button class="filter-btn active" onclick="setFilter('yearly')">Yearly</button>
+                                <button class="filter-btn" onclick="setFilter('monthly')">Monthly</button>
+                                <button class="filter-btn" onclick="setFilter('weekly')">Weekly</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="scrollable-body">
+                    <div class="dashboard-grid">
+                        <div class="card radar-card">
+                            <h3>Strategy Visualization</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="radarChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="card tasks-card">
+                            <h3>Milestones & KPIs</h3>
+                            <div id="task-list" class="task-list"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="profile" class="page-view" style="display:none;">
+                <div class="sticky-header">
+                    <div class="view-header"><h1>Personal Data</h1></div>
+                </div>
+                <div class="scrollable-body">
+                    <div class="card form-card">
+                        <div class="form-group">
+                            <label>Nickname (Displays in Navbar)</label>
+                            <input type="text" id="prof-nickname" placeholder="e.g. Erika">
+                        </div>
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" id="prof-name">
+                        </div>
+                        <div class="form-group">
+                            <label>Age</label>
+                            <input type="number" id="prof-age">
+                        </div>
+                        <div class="form-group">
+                            <label>Birthday</label>
+                            <input type="date" id="prof-bday">
+                        </div>
+                        <button class="btn-primary" onclick="saveProfile()">Save Profile Changes</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="skills" class="page-view" style="display:none;">
+                <div class="sticky-header">
+                    <div class="view-header">
+                        <h1>Manage Skills Area</h1>
+                        <button class="btn-primary" style="width:auto;" onclick="openAddSkillModal()">+ Add New Skill</button>
+                    </div>
+                    
+                    <div class="filter-toggle-header" onclick="toggleFilters()">
+                        <span style="font-weight:600; color:#64748B;">Search & Filters</span>
+                        <span id="filter-toggle-icon" style="color:#64748B;">▼</span>
+                    </div>
+
+                    <div id="filter-panel" class="filter-toolbar advanced-filters">
+                        <div class="filter-row">
+                            <div class="filter-group" style="flex:2;">
+                                <label>Search Name</label>
+                                <input type="text" id="filterSearch" placeholder="Search skills..." onkeyup="renderSkillsManageList()">
+                            </div>
+                            <div class="filter-group">
+                                <label>View Hierarchy</label>
+                                <select id="skillsFilter" onchange="renderSkillsManageList()">
+                                    <option value="all">Show All</option>
+                                    <option value="parents">Top Level Only</option>
+                                    <option value="children">Sub-skills Only</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="filter-row">
+                            <div class="filter-group">
+                                <label>From Date</label>
+                                <input type="date" id="filterDateFrom" onchange="renderSkillsManageList()">
+                            </div>
+                            <div class="filter-group">
+                                <label>To Date (Deadline)</label>
+                                <input type="date" id="filterDateTo" onchange="renderSkillsManageList()">
+                            </div>
+                            <div class="filter-group">
+                                <label>Sort By</label>
+                                <select id="skillsSort" onchange="renderSkillsManageList()">
+                                    <option value="name_asc">Name (A-Z)</option>
+                                    <option value="deadline_asc">Deadline (Soonest)</option>
+                                    <option value="deadline_desc">Deadline (Latest)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="scrollable-body">
+                    <div class="card">
+                        <div id="skills-manage-list" class="manage-list"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="skillEntryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header-row">
+                <button id="modal-back-btn" class="btn-back" onclick="navigateBack()">← Back</button>
+                <h2 id="entryModalTitle" style="margin:0;">Add New Skill</h2>
+            </div>
+
+            <input type="hidden" id="skill-id-hidden">
+            
+            <div class="form-group">
+                <label>Skill / Goal Name</label>
+                <input type="text" id="skill-name-input" placeholder="e.g., Running (Distance)">
+            </div>
+            <div class="form-group">
+                <label>Deadline (Determines Year)</label>
+                <input type="date" id="skill-deadline-input">
+            </div>
+            <div class="form-group">
+                <label>Parent Category (Optional)</label>
+                <select id="skill-parent-input">
+                    <option value="">None (Top Level)</option>
+                </select>
+            </div>
+            
+            <div id="sub-skill-section" class="form-group" style="border:1px dashed var(--electric); padding:10px; border-radius:10px; background:#F0F7FF; display:none;">
+                <label style="color:var(--electric); margin-bottom:5px;">Hierarchy Actions</label>
+                <div style="font-size:0.8rem; color:#64748B; margin-bottom:10px;">Want to add a deeper level (Revision/Child) to this skill?</div>
+                <button class="btn-primary btn-sm" style="width:100%;" onclick="createSubSkill()">+ Create Sub-Skill (Next Level)</button>
+            </div>
+
+            <div class="form-group" style="background: #F8F9FD; padding: 15px; border-radius: 10px; border: 1px solid #E2E8F0; margin-top:15px;">
+                <label style="margin-bottom:10px;">Progress Definition (Leaf Skills Only)</label>
+                <p style="font-size:0.8rem; color:#64748B; margin-bottom:10px;">Define specific percentage markers. (Ignored if this skill has sub-skills).</p>
+                <div id="milestone-container"></div>
+                <button class="btn-outline btn-sm" onclick="addMilestoneRow()">+ Add Progress Milestone</button>
+            </div>
+
+            <div id="relation-tree-container" class="relation-tree" style="display:none;">
+                <div class="relation-label">Relationship Map</div>
+                <div id="relation-tree-list"></div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="saveSkillData()">Save & Close</button>
+                <button class="btn-secondary" onclick="closeEntryModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="updateModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalSkillName">Skill Name</h2>
+            
+            <div class="form-group">
+                <label>Current Status Note</label>
+                <textarea id="update-note-input" rows="3" placeholder="e.g., Currently running 4.5km, felt strong..."></textarea>
+            </div>
+
+            <p style="margin-bottom:10px; color:#666; font-size:0.9rem;">Tap a level to update progress:</p>
+            <div id="levelOptions" class="level-grid"></div>
+            
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="data.js"></script> 
+    <script src="script.js"></script>
+</body>
+</html>

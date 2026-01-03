@@ -30,6 +30,7 @@ function initApp() {
     renderDashboard();
     renderSkillsManageList();
     syncProfileUI();
+    showPage('dashboard');
 }
 
 function updateLogo() {

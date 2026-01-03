@@ -819,14 +819,16 @@ textarea {
         display: none !important;
     }
 
+    /* Inside @media (max-width: 768px) */
     .content {
         flex: 1;
-        /* CHANGE THIS LINE: */
-        height: 0;  /* Was 100%. '0' forces flex-grow to calculate the remaining space correctly in Safari. */
-        min-height: 0; /* Keep this! */
-        margin-top: 0;
+        position: relative;
+        /* CRITICAL: Creates a boundary for the child */
         width: 100%;
-        overflow: hidden; /* Ensure this is here so it doesn't spill out */
+        overflow: hidden;
+        /* Ensures no double scrollbars */
+        margin-top: 0;
+        /* Remove 'height' properties here, they confuse Safari */
     }
 
     .sticky-header {
@@ -885,6 +887,20 @@ textarea {
         flex-direction: column;
     }
 
+    /* Inside @media (max-width: 768px) */
+    .page-view {
+        position: absolute !important;
+        /* Forces it to stay inside .content */
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100% !important;
+        /* Forces it to match the parent height exactly */
+
+        /* Fix for iOS bottom bar covering content */
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
 }
 
 .child-link-btn {
@@ -913,7 +929,8 @@ body,
 }
 
 .page-view {
-    display: none; /* Default state */
+    display: none;
+    /* Default state */
     flex-direction: column;
     height: 100%;
 }

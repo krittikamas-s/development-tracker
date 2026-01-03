@@ -821,13 +821,12 @@ textarea {
 
     .content {
         flex: 1;
-        /* height: auto;  <-- DELETE THIS LINE. It breaks the scrolling. */
-        height: 100%;
-        /* Add this to enforce the limit */
-        min-height: 0;
-        /* Add this to force it to shrink-wrap the flex parent */
+        /* CHANGE THIS LINE: */
+        height: 0;  /* Was 100%. '0' forces flex-grow to calculate the remaining space correctly in Safari. */
+        min-height: 0; /* Keep this! */
         margin-top: 0;
         width: 100%;
+        overflow: hidden; /* Ensure this is here so it doesn't spill out */
     }
 
     .sticky-header {

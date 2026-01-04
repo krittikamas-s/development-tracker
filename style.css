@@ -1,3 +1,4 @@
+
 /* --- GLOBAL RESET & CORE STYLES --- */
 :root {
     --navy: #1A1C32;
@@ -387,8 +388,7 @@ canvas {
     min-width: 0;
     padding-right: 15px;
     display: flex;
-    flex-direction: row; /* Changed to row for checkbox alignment */
-    align-items: center;
+    flex-direction: column; /* Changed to row for checkbox alignment */
     gap: 8px;
 }
 
@@ -909,6 +909,81 @@ button:active {
     align-items: center;
     gap: 10px;
     margin-bottom: 20px;
+}
+
+/* --- TABS & HISTORY (NEW) --- */
+.tab-header {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+    gap: 20px;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    padding: 10px 5px;
+    cursor: pointer;
+    color: #64748B;
+    font-weight: 600;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    color: var(--electric);
+}
+
+.tab-btn.active {
+    color: var(--electric);
+    border-bottom-color: var(--electric);
+}
+
+.history-list {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.history-entry {
+    border-left: 2px solid var(--border);
+    padding-left: 15px;
+    padding-bottom: 20px;
+    position: relative;
+}
+
+.history-entry:before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 0;
+    width: 10px;
+    height: 10px;
+    background: white;
+    border: 2px solid var(--electric);
+    border-radius: 50%;
+}
+
+.history-date {
+    font-size: 0.75rem;
+    color: #94A3B8;
+    margin-bottom: 4px;
+}
+
+.history-note {
+    font-size: 0.9rem;
+    color: var(--text);
+    background: #f8fafc;
+    padding: 8px;
+    border-radius: 6px;
+    margin-top: 5px;
+    border: 1px solid #f1f5f9;
+}
+
+.history-change {
+    font-size: 0.8rem;
+    color: var(--success);
+    font-weight: 600;
 }
 
 /* --- MOBILE RESPONSIVE --- */

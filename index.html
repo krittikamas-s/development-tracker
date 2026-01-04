@@ -212,45 +212,55 @@
                 <h2 id="entryModalTitle" style="margin:0;">Add New Skill</h2>
             </div>
 
-            <input type="hidden" id="skill-id-hidden">
-            
-            <div class="form-group">
-                <label>Skill / Goal Name</label>
-                <input type="text" id="skill-name-input" placeholder="e.g., Running (Distance)">
-            </div>
-            <div class="form-group">
-                <label>Deadline (Determines Year)</label>
-                <input type="date" id="skill-deadline-input">
-            </div>
-            <div class="form-group">
-                <label>Parent Category (Optional)</label>
-                <select id="skill-parent-input">
-                    <option value="">None (Top Level)</option>
-                </select>
-            </div>
-            
-            <div id="reactivate-section" class="form-group" style="display:none; padding:10px; background:#f0fdf4; border:1px solid #22c55e; border-radius:8px;">
-                 <label style="color:#15803d; margin-bottom:5px;">This skill is archived.</label>
-                 <button class="btn-secondary btn-sm" onclick="reactivateCurrentSkill()">Restore to Active</button>
-            </div>
-            
-            <div id="sub-skill-section" class="form-group" style="border:1px dashed var(--electric); padding:10px; border-radius:10px; background:#F0F7FF; display:none;">
-                <label style="color:var(--electric); margin-bottom:5px;">Hierarchy Actions</label>
-                <div style="font-size:0.8rem; color:#64748B; margin-bottom:10px;">Want to add a deeper level (Revision/Child) to this skill?</div>
-                <button class="btn-primary btn-sm" style="width:100%;" onclick="createSubSkill()">+ Create Sub-Skill (Next Level)</button>
+            <div class="tab-header">
+                <button id="tab-btn-edit-details" class="tab-btn active" onclick="switchModalTab('edit', 'details')">Details</button>
+                <button id="tab-btn-edit-history" class="tab-btn" onclick="switchModalTab('edit', 'history')">History Log</button>
             </div>
 
-            <div class="form-group" style="background: #F8F9FD; padding: 15px; border-radius: 10px; border: 1px solid #E2E8F0; margin-top:15px;">
-                <label style="margin-bottom:10px;">Progress Definition (Leaf Skills Only)</label>
-                <p style="font-size:0.8rem; color:#64748B; margin-bottom:10px;">Define specific percentage markers. (Ignored if this skill has sub-skills).</p>
-                <div id="milestone-container"></div>
-                <button class="btn-outline btn-sm" onclick="addMilestoneRow()">+ Add Progress Milestone</button>
+            <div id="tab-details">
+                <input type="hidden" id="skill-id-hidden">
+                
+                <div class="form-group">
+                    <label>Skill / Goal Name</label>
+                    <input type="text" id="skill-name-input" placeholder="e.g., Running (Distance)">
+                </div>
+                <div class="form-group">
+                    <label>Deadline (Determines Year)</label>
+                    <input type="date" id="skill-deadline-input">
+                </div>
+                <div class="form-group">
+                    <label>Parent Category (Optional)</label>
+                    <select id="skill-parent-input">
+                        <option value="">None (Top Level)</option>
+                    </select>
+                </div>
+                
+                <div id="reactivate-section" class="form-group" style="display:none; padding:10px; background:#f0fdf4; border:1px solid #22c55e; border-radius:8px;">
+                     <label style="color:#15803d; margin-bottom:5px;">This skill is archived.</label>
+                     <button class="btn-secondary btn-sm" onclick="reactivateCurrentSkill()">Restore to Active</button>
+                </div>
+                
+                <div id="sub-skill-section" class="form-group" style="border:1px dashed var(--electric); padding:10px; border-radius:10px; background:#F0F7FF; display:none;">
+                    <label style="color:var(--electric); margin-bottom:5px;">Hierarchy Actions</label>
+                    <div style="font-size:0.8rem; color:#64748B; margin-bottom:10px;">Want to add a deeper level (Revision/Child) to this skill?</div>
+                    <button class="btn-primary btn-sm" style="width:100%;" onclick="createSubSkill()">+ Create Sub-Skill (Next Level)</button>
+                </div>
+
+                <div class="form-group" style="background: #F8F9FD; padding: 15px; border-radius: 10px; border: 1px solid #E2E8F0; margin-top:15px;">
+                    <label style="margin-bottom:10px;">Progress Definition (Leaf Skills Only)</label>
+                    <p style="font-size:0.8rem; color:#64748B; margin-bottom:10px;">Define specific percentage markers. (Ignored if this skill has sub-skills).</p>
+                    <div id="milestone-container"></div>
+                    <button class="btn-outline btn-sm" onclick="addMilestoneRow()">+ Add Progress Milestone</button>
+                </div>
+
+                <div id="relation-tree-container" class="relation-tree" style="display:none;">
+                    <div class="relation-label">Relationship Map</div>
+                    <div id="relation-tree-list"></div>
+                </div>
             </div>
 
-            <div id="relation-tree-container" class="relation-tree" style="display:none;">
-                <div class="relation-label">Relationship Map</div>
-                <div id="relation-tree-list"></div>
-            </div>
+            <div id="tab-history" style="display:none;">
+                </div>
 
             <div class="modal-footer">
                 <button id="modal-back-btn" class="btn-back" onclick="navigateBack()">← Back</button>
@@ -263,12 +273,24 @@
     <div id="updateModal" class="modal">
         <div class="modal-content">
             <h2 id="modalSkillName">Skill Name</h2>
-            <div class="form-group">
-                <label>Current Status Note</label>
-                <textarea id="update-note-input" rows="3" placeholder="e.g., Currently running 4.5km, felt strong..."></textarea>
+            
+            <div class="tab-header">
+                <button id="tab-btn-update-action" class="tab-btn active" onclick="switchModalTab('update', 'action')">Update Progress</button>
+                <button id="tab-btn-update-history" class="tab-btn" onclick="switchModalTab('update', 'history')">History</button>
             </div>
-            <p style="margin-bottom:10px; color:#666; font-size:0.9rem;">Tap a level to update progress:</p>
-            <div id="levelOptions" class="level-grid"></div>
+
+            <div id="update-tab-action">
+                <div class="form-group">
+                    <label>Current Status Note (Optional)</label>
+                    <textarea id="update-note-input" rows="3" placeholder="e.g., Currently running 4.5km, felt strong..."></textarea>
+                </div>
+                <p style="margin-bottom:10px; color:#666; font-size:0.9rem;">Tap a level below to record progress:</p>
+                <div id="levelOptions" class="level-grid"></div>
+            </div>
+
+            <div id="update-tab-history" style="display:none;">
+                </div>
+
             <div class="modal-footer">
                 <button class="btn-secondary" onclick="closeModal()">Close</button>
             </div>

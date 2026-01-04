@@ -1,3 +1,4 @@
+
 let state = {};
 let radarChart = null;
 let activeSkillId = null;
@@ -5,8 +6,8 @@ let currentFilter = 'yearly';
 let currentYearFilter = new Date().getFullYear();
 let modalStack = [];
 let expandedSkills = new Set();
-let selectionMode = false; // New: Tracks if checkboxes are visible
-let selectedSkills = new Set(); // New: Tracks selected IDs
+let selectionMode = false;
+let selectedSkills = new Set();
 
 window.onload = () => { initApp(); };
 
@@ -15,8 +16,11 @@ function initApp() {
     if (saved) {
         state = JSON.parse(saved);
         if (!state.profile) state.profile = {};
-        // Migration: Ensure 'active' property exists
-        state.skills.forEach(s => { if (s.active === undefined) s.active = true; });
+        // Migration: Ensure properties exist
+        state.skills.forEach(s => { 
+            if (s.active === undefined) s.active = true;
+            if (!s.history) s.history = []; // Migration: History
+        });
     } else {
         state = DEFAULT_STATE;
         saveToLocal();
@@ -49,7 +53,6 @@ function renderYearSelector() {
     const select = document.getElementById('dashboardYearSelect');
     select.innerHTML = '';
     const years = new Set([new Date().getFullYear()]);
-    // Only show years for ACTIVE skills in the selector
     state.skills.filter(s => s.active !== false).forEach(s => {
         if (s.deadline) years.add(new Date(s.deadline).getFullYear());
     });
@@ -70,10 +73,8 @@ function handleYearChange() {
 
 function getFilteredSkills() {
     const now = new Date();
-    // CRITICAL: Filter out Inactive skills for Dashboard
     return state.skills.filter(skill => {
-        if (skill.active === false) return false; // Hide inactive
-
+        if (skill.active === false) return false;
         const deadline = new Date(skill.deadline);
         if (deadline.getFullYear() !== currentYearFilter) return false;
         if (currentFilter === 'monthly') return deadline.getMonth() === now.getMonth();
@@ -105,7 +106,7 @@ function formatLabelForChart(str, isMobile) {
 function renderRadar() {
     const ctx = document.getElementById('radarChart').getContext('2d');
     const filtered = getFilteredSkills();
-    const displaySkills = filtered.filter(s => s.parentId === null); // Top Level Only
+    const displaySkills = filtered.filter(s => s.parentId === null);
 
     const isMobile = window.innerWidth <= 768;
     const labels = displaySkills.map(s => formatLabelForChart(s.name, isMobile));
@@ -146,7 +147,6 @@ function renderRadar() {
 function calculateProgress(skillId) {
     const skill = state.skills.find(s => s.id === skillId);
     if (!skill) return 0;
-    // Only calculate using ACTIVE children
     const children = state.skills.filter(s => s.parentId === skillId && s.active !== false);
 
     if (children.length === 0) {
@@ -244,7 +244,6 @@ function massArchive() {
 function massDelete() {
     if (selectedSkills.size === 0) return alert("No skills selected.");
     if (confirm(`PERMANENTLY DELETE ${selectedSkills.size} skills? This cannot be undone.`)) {
-        // Filter out selected IDs
         state.skills = state.skills.filter(s => !selectedSkills.has(s.id));
         saveToLocal();
         exitSelectionMode();
@@ -274,7 +273,6 @@ function toggleFilters() {
     const panel = document.getElementById('filter-panel');
     const icon = document.getElementById('filter-toggle-icon');
     const isHidden = panel.style.display === 'none';
-
     if (isHidden) { panel.style.display = 'flex'; icon.innerText = '▼'; }
     else { panel.style.display = 'none'; icon.innerText = '▶'; }
 }
@@ -283,7 +281,7 @@ function renderSkillsManageList() {
     const list = document.getElementById('skills-manage-list');
     const searchVal = document.getElementById('filterSearch').value.toLowerCase();
     const hierarchyFilter = document.getElementById('skillsFilter').value;
-    const statusFilter = document.getElementById('skillsStatusFilter').value; // NEW
+    const statusFilter = document.getElementById('skillsStatusFilter').value;
     const dateFrom = document.getElementById('filterDateFrom').value;
     const dateTo = document.getElementById('filterDateTo').value;
     const sort = document.getElementById('skillsSort').value;
@@ -291,11 +289,8 @@ function renderSkillsManageList() {
     list.innerHTML = '';
     let items = state.skills;
 
-    // Apply Status Filter
     if (statusFilter === 'active') items = items.filter(s => s.active !== false);
     if (statusFilter === 'inactive') items = items.filter(s => s.active === false);
-
-    // Apply Other Filters
     if (searchVal) items = items.filter(s => s.name.toLowerCase().includes(searchVal));
     if (hierarchyFilter === 'parents') items = items.filter(s => s.parentId === null);
     if (hierarchyFilter === 'children') items = items.filter(s => s.parentId !== null);
@@ -310,7 +305,6 @@ function renderSkillsManageList() {
     }
 
     if (isFiltered) {
-        // Flat List for Filters
         items.sort((a, b) => {
             if (sort === 'deadline_asc') return new Date(a.deadline) - new Date(b.deadline);
             if (sort === 'deadline_desc') return new Date(b.deadline) - new Date(a.deadline);
@@ -318,7 +312,6 @@ function renderSkillsManageList() {
         });
         items.forEach(skill => list.appendChild(createSkillItem(skill, 0, false)));
     } else {
-        // Tree View (Default)
         const parents = items.filter(s => !s.parentId).sort((a, b) => a.name.localeCompare(b.name));
         parents.forEach(parent => {
             const hasChildren = state.skills.some(s => s.parentId === parent.id);
@@ -345,14 +338,11 @@ function createSkillItem(skill, depth, hasChildren) {
     const div = document.createElement('div');
     const indent = depth * 20;
     const borderStyle = depth > 0 ? `border-left: 2px solid #E2E8F0; margin-left: ${indent}px;` : '';
-
-    // Style adjustments for Inactive items
     const inactiveClass = (skill.active === false) ? 'inactive-skill' : '';
 
     div.className = `task-item ${inactiveClass}`;
     div.style.cssText = `${borderStyle} padding-left: 10px;`;
 
-    // Checkbox Rendering
     let checkboxHtml = '';
     if (selectionMode) {
         const isChecked = selectedSkills.has(skill.id) ? 'checked' : '';
@@ -392,7 +382,7 @@ function toggleChildren(id) {
     renderSkillsManageList();
 }
 
-// === UTILS & MODALS (Basic) ===
+// === UTILS & MODALS ===
 
 function resetToDefault() {
     if (confirm("Are you sure? This will delete all progress.")) {
@@ -460,7 +450,55 @@ function setFilter(filterType) {
     renderDashboard();
 }
 
-// === MODAL LOGIC ===
+// === HISTORY HELPER ===
+function renderHistoryHTML(skillId) {
+    const skill = state.skills.find(s => s.id === skillId);
+    if (!skill || !skill.history || skill.history.length === 0) {
+        return '<p style="color:#94A3B8; text-align:center; padding:20px;">No history recorded yet.</p>';
+    }
+    
+    // Sort history new to old
+    const sorted = [...skill.history].sort((a,b) => new Date(b.date) - new Date(a.date));
+    
+    let html = '<div class="history-list">';
+    sorted.forEach(entry => {
+        const dateStr = new Date(entry.date).toLocaleString();
+        html += `
+            <div class="history-entry">
+                <div class="history-date">${dateStr}</div>
+                ${entry.change ? `<div class="history-change">${entry.change}</div>` : ''}
+                ${entry.note ? `<div class="history-note">"${entry.note}"</div>` : ''}
+            </div>
+        `;
+    });
+    html += '</div>';
+    return html;
+}
+
+// === TABS HELPER ===
+function switchModalTab(modalType, tabName) {
+    // modalType: 'edit' or 'update'
+    // tabName: 'details'/'history' or 'action'/'history'
+    
+    if (modalType === 'edit') {
+        document.querySelectorAll('#skillEntryModal .tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`tab-btn-edit-${tabName}`).classList.add('active');
+        
+        document.getElementById('tab-details').style.display = (tabName === 'details') ? 'block' : 'none';
+        document.getElementById('tab-history').style.display = (tabName === 'history') ? 'block' : 'none';
+        
+        // Hide/Show footer buttons based on tab (optional, but keep save visible for details)
+    } else if (modalType === 'update') {
+        document.querySelectorAll('#updateModal .tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`tab-btn-update-${tabName}`).classList.add('active');
+        
+        document.getElementById('update-tab-action').style.display = (tabName === 'action') ? 'block' : 'none';
+        document.getElementById('update-tab-history').style.display = (tabName === 'history') ? 'block' : 'none';
+    }
+}
+
+
+// === ADD/EDIT SKILL MODAL ===
 function openAddSkillModal() {
     modalStack = []; updateBackButton();
     document.getElementById('entryModalTitle').innerText = "Add New Skill";
@@ -471,6 +509,11 @@ function openAddSkillModal() {
     document.getElementById('relation-tree-container').style.display = 'none';
     document.getElementById('sub-skill-section').style.display = 'none';
     document.getElementById('reactivate-section').style.display = 'none';
+    
+    // Default to Details tab
+    switchModalTab('edit', 'details');
+    // Hide history tab for new skills
+    document.getElementById('tab-btn-edit-history').style.display = 'none';
 
     populateParentDropdown(null);
     document.getElementById('skillEntryModal').style.display = 'flex';
@@ -489,15 +532,19 @@ function loadModalContent(id) {
     document.getElementById('skill-name-input').value = skill.name;
     document.getElementById('skill-deadline-input').value = skill.deadline;
 
-    // Show Reactivate Button if Inactive
     document.getElementById('reactivate-section').style.display = (skill.active === false) ? 'block' : 'none';
+    document.getElementById('sub-skill-section').style.display = 'block';
 
     const con = document.getElementById('milestone-container'); con.innerHTML = '';
     if (skill.milestones) skill.milestones.forEach(m => addMilestoneRow(m.value, m.label));
 
+    // Show history tab
+    document.getElementById('tab-btn-edit-history').style.display = 'block';
+    document.getElementById('tab-history').innerHTML = renderHistoryHTML(skill.id);
+    switchModalTab('edit', 'details');
+
     populateParentDropdown(skill.parentId, skill.id);
     renderRelationshipTree(skill);
-    document.getElementById('sub-skill-section').style.display = 'block';
 }
 
 function saveSkillData() {
@@ -513,10 +560,24 @@ function saveSkillData() {
 
     if (id) {
         const s = state.skills.find(x => x.id == id);
-        if (s) { s.name = name; s.deadline = deadline; s.parentId = parentId ? parseInt(parentId) : null; s.milestones = milestones; }
+        if (s) { 
+            s.name = name; 
+            s.deadline = deadline; 
+            s.parentId = parentId ? parseInt(parentId) : null; 
+            s.milestones = milestones; 
+        }
     } else {
-        // New Skills are active by default
-        state.skills.push({ id: Date.now(), name, active: true, levelId: "l1", startDate: new Date().toISOString().split('T')[0], deadline, parentId: parentId ? parseInt(parentId) : null, milestones });
+        state.skills.push({ 
+            id: Date.now(), 
+            name, 
+            active: true, 
+            levelId: "l1", 
+            startDate: new Date().toISOString().split('T')[0], 
+            deadline, 
+            parentId: parentId ? parseInt(parentId) : null, 
+            milestones,
+            history: [] 
+        });
     }
     saveToLocal(); renderYearSelector();
     if (id) loadModalContent(parseInt(id)); else closeEntryModal();
@@ -531,15 +592,75 @@ function deleteSkill(id) {
     }
 }
 
-// Helpers
+// Helpers for Edit Modal
 function navigateToSkill(id) { const cur = document.getElementById('skill-id-hidden').value; if (cur) modalStack.push(parseInt(cur)); loadModalContent(id); }
 function navigateBack() { if (modalStack.length > 0) loadModalContent(modalStack.pop()); }
 function updateBackButton() { document.getElementById('modal-back-btn').style.display = modalStack.length > 0 ? 'block' : 'none'; }
-function createSubSkill() { /* (Same as before) */ const pid = document.getElementById('skill-id-hidden').value; openAddSkillModal(); document.getElementById('skill-parent-input').value = pid; }
+function createSubSkill() { const pid = document.getElementById('skill-id-hidden').value; openAddSkillModal(); document.getElementById('skill-parent-input').value = pid; }
 function populateParentDropdown(sel, cur) { const el = document.getElementById('skill-parent-input'); el.innerHTML = '<option value="">None (Top Level)</option>'; state.skills.filter(s => s.id !== cur && s.active !== false).forEach(s => el.innerHTML += `<option value="${s.id}" ${s.id === sel ? 'selected' : ''}>${s.name}</option>`); }
-function renderRelationshipTree(currentSkill) { /* (Same as before) */ const container = document.getElementById('relation-tree-list'); container.innerHTML = ''; document.getElementById('relation-tree-container').style.display = 'block'; if (currentSkill.parentId) { const p = state.skills.find(s => s.id === currentSkill.parentId); if (p) container.appendChild(createRelationNode(p, 'parent')); } container.appendChild(createRelationNode(currentSkill, 'current')); state.skills.filter(s => s.parentId === currentSkill.id).forEach(c => container.appendChild(createRelationNode(c, 'child'))); }
+function renderRelationshipTree(currentSkill) { const container = document.getElementById('relation-tree-list'); container.innerHTML = ''; document.getElementById('relation-tree-container').style.display = 'block'; if (currentSkill.parentId) { const p = state.skills.find(s => s.id === currentSkill.parentId); if (p) container.appendChild(createRelationNode(p, 'parent')); } container.appendChild(createRelationNode(currentSkill, 'current')); state.skills.filter(s => s.parentId === currentSkill.id).forEach(c => container.appendChild(createRelationNode(c, 'child'))); }
 function createRelationNode(skill, type) { const div = document.createElement('div'); div.className = `relation-node ${type}`; div.onclick = () => navigateToSkill(skill.id); div.innerHTML = `<div class="node-info"><span class="node-name">${skill.name}</span></div>`; return div; }
 function addMilestoneRow(val = '', label = '') { const container = document.getElementById('milestone-container'); const div = document.createElement('div'); div.className = 'milestone-row'; div.innerHTML = `<input type="number" class="ms-val" value="${val}" style="width:60px; margin-right:5px;"><input type="text" class="ms-label" value="${label}" style="flex:1;"><button class="btn-remove-row" onclick="this.parentElement.remove()">×</button>`; container.appendChild(div); }
 function closeEntryModal() { document.getElementById('skillEntryModal').style.display = 'none'; }
-function openUpdateModal(id) { activeSkillId = id; const skill = state.skills.find(s => s.id === id); document.getElementById('modalSkillName').innerText = skill.name; document.getElementById('update-note-input').value = skill.note || ""; const container = document.getElementById('levelOptions'); container.innerHTML = ''; const children = state.skills.filter(s => s.parentId === id && s.active !== false); if (children.length > 0) { document.getElementById('update-note-input').style.display = 'none'; children.forEach(child => { const btn = document.createElement('div'); btn.className = 'level-btn child-link-btn'; btn.innerHTML = `<strong>${child.name}</strong>`; btn.onclick = () => { closeModal(); setTimeout(() => openUpdateModal(child.id), 100); }; container.appendChild(btn); }); } else { document.getElementById('update-note-input').style.display = 'block'; const levelsToRender = (skill.milestones && skill.milestones.length > 0) ? skill.milestones.sort((a, b) => a.value - b.value) : state.config.levels; levelsToRender.forEach(lvl => { const btn = document.createElement('div'); btn.className = 'level-btn'; if (lvl.id === skill.levelId) btn.style.borderColor = 'var(--electric)'; btn.innerHTML = `<strong>${lvl.label}</strong> <span style="float:right">${lvl.value}%</span>`; btn.onclick = () => { skill.levelId = lvl.id; skill.note = document.getElementById('update-note-input').value; saveToLocal(); closeModal(); renderDashboard(); renderSkillsManageList(); }; container.appendChild(btn); }); } document.getElementById('updateModal').style.display = 'flex'; }
+
+
+// === UPDATE STATUS MODAL (DASHBOARD) ===
+
+function openUpdateModal(id) {
+    activeSkillId = id;
+    const skill = state.skills.find(s => s.id === id);
+    document.getElementById('modalSkillName').innerText = skill.name;
+    document.getElementById('update-note-input').value = skill.note || "";
+    
+    // Render History Tab Content
+    document.getElementById('update-tab-history').innerHTML = renderHistoryHTML(id);
+    switchModalTab('update', 'action');
+
+    const container = document.getElementById('levelOptions');
+    container.innerHTML = '';
+    const children = state.skills.filter(s => s.parentId === id && s.active !== false);
+
+    if (children.length > 0) {
+        document.getElementById('update-note-input').style.display = 'none';
+        children.forEach(child => {
+            const btn = document.createElement('div');
+            btn.className = 'level-btn child-link-btn';
+            btn.innerHTML = `<strong>${child.name}</strong>`;
+            btn.onclick = () => { closeModal(); setTimeout(() => openUpdateModal(child.id), 100); };
+            container.appendChild(btn);
+        });
+    } else {
+        document.getElementById('update-note-input').style.display = 'block';
+        const levelsToRender = (skill.milestones && skill.milestones.length > 0) ? skill.milestones.sort((a, b) => a.value - b.value) : state.config.levels;
+        
+        levelsToRender.forEach(lvl => {
+            const btn = document.createElement('div');
+            btn.className = 'level-btn';
+            if (lvl.id === skill.levelId) btn.style.borderColor = 'var(--electric)';
+            btn.innerHTML = `<strong>${lvl.label}</strong> <span style="float:right">${lvl.value}%</span>`;
+            
+            btn.onclick = () => {
+                const note = document.getElementById('update-note-input').value;
+                // LOG HISTORY
+                if (!skill.history) skill.history = [];
+                skill.history.push({
+                    date: new Date(),
+                    levelId: lvl.id,
+                    change: `Status set to: ${lvl.label} (${lvl.value}%)`,
+                    note: note
+                });
+                
+                skill.levelId = lvl.id;
+                skill.note = note;
+                
+                saveToLocal();
+                closeModal();
+                renderDashboard();
+                renderSkillsManageList();
+            };
+            container.appendChild(btn);
+        });
+    }
+    document.getElementById('updateModal').style.display = 'flex';
+}
 function closeModal() { document.getElementById('updateModal').style.display = 'none'; }

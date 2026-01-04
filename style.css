@@ -7,6 +7,10 @@
     --text: #333C4E;
     --border: #E2E8F0;
     --danger: #EF4444;
+    
+    /* Animation Curves */
+    --ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 * {
@@ -19,12 +23,33 @@ body {
     background: var(--bg);
     color: var(--text);
     overflow: hidden;
+    -webkit-font-smoothing: antialiased;
 }
 
 .app-container {
     display: flex;
     height: 100vh;
     overflow: hidden;
+}
+
+/* --- ANIMATIONS --- */
+
+/* Fade In & Scale Up (for Modals) */
+@keyframes modalEnter {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Fade In (for Page Views) */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* --- Mobile Header --- */
@@ -34,6 +59,7 @@ body {
 
 #mobile-overlay {
     display: none;
+    transition: opacity 0.3s ease;
 }
 
 /* --- Sidebar (Desktop) --- */
@@ -44,7 +70,7 @@ body {
     padding: 25px;
     display: flex;
     flex-direction: column;
-    transition: width 0.3s ease;
+    transition: width 0.4s var(--ease-out), transform 0.3s ease;
     flex-shrink: 0;
     z-index: 1000;
 }
@@ -74,6 +100,12 @@ body {
     justify-content: center;
     font-weight: bold;
     flex-shrink: 0;
+    transition: transform 0.3s var(--ease-elastic);
+}
+
+/* Logo Animation on Hover */
+.logo-area:hover .logo-icon {
+    transform: rotate(10deg) scale(1.1);
 }
 
 .logo-text {
@@ -83,6 +115,7 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 150px;
+    transition: opacity 0.2s;
 }
 
 .sidebar-toggle {
@@ -94,15 +127,20 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s;
     height: 32px;
     width: 32px;
     border-radius: 8px;
+    transition: all 0.2s ease;
 }
 
 .sidebar-toggle:hover {
     background: rgba(255, 255, 255, 0.2);
     color: var(--electric);
+    transform: scale(1.05);
+}
+
+.sidebar-toggle:active {
+    transform: scale(0.95);
 }
 
 .sidebar-toggle svg {
@@ -122,16 +160,28 @@ body {
     cursor: pointer;
     border-radius: 8px;
     margin-bottom: 8px;
-    transition: 0.2s;
     display: flex;
     align-items: center;
     gap: 12px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.2s ease;
 }
 
-.nav-links li.active,
+/* Nav Link Hover Effect */
 .nav-links li:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateX(3px);
+}
+
+.nav-links li.active {
+    background: rgba(255, 255, 255, 0.15);
     color: var(--electric);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.nav-links li.active .icon {
+    transform: scale(1.1);
 }
 
 .nav-links li .icon {
@@ -139,6 +189,7 @@ body {
     align-items: center;
     justify-content: center;
     width: 24px;
+    transition: transform 0.2s var(--ease-elastic);
 }
 
 .storage-actions {
@@ -157,17 +208,6 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
-}
-
-.btn-reset {
-    border-color: rgba(255, 255, 255, 0.3);
-    color: #ccc;
-}
-
-.btn-reset:hover {
-    border-color: var(--danger);
-    color: var(--danger);
-    background: rgba(239, 68, 68, 0.1);
 }
 
 /* --- Sidebar Collapsed --- */
@@ -205,6 +245,11 @@ body {
     padding: 12px;
 }
 
+.sidebar.collapsed .nav-links li:hover {
+    transform: none; /* No shifting when collapsed */
+    background: rgba(255, 255, 255, 0.1);
+}
+
 .sidebar.collapsed .nav-links li .icon {
     margin: 0;
 }
@@ -223,6 +268,14 @@ body {
     overflow: hidden;
     position: relative;
     width: 100%;
+}
+
+/* Add animation to page switching */
+.page-view {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+    animation: fadeIn 0.4s var(--ease-out);
 }
 
 .sticky-header {
@@ -263,6 +316,11 @@ body {
     font-weight: 600;
     display: inline-block;
     margin-top: 5px;
+    transition: transform 0.3s;
+}
+
+.badge-success:hover {
+    transform: scale(1.05);
 }
 
 .dashboard-grid {
@@ -278,6 +336,14 @@ body {
     border: 1px solid var(--border);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
     min-width: 0;
+    transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
+}
+
+/* Card Hover Effect: Lift up */
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.08);
+    border-color: #dbeafe;
 }
 
 .radar-card {
@@ -304,19 +370,25 @@ canvas {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 0;
+    padding: 15px 10px; /* Added horizontal padding for hover effect */
+    margin: 0 -10px;   /* Negative margin to counteract padding */
     border-bottom: 1px solid #f0f0f0;
+    border-radius: 8px;
+    transition: background-color 0.2s, transform 0.2s;
 }
 
-/* CHANGED: Align items flex-start to align arrow with text */
+.task-item:hover {
+    background-color: #f8fafc;
+    transform: translateX(2px);
+}
+
 .task-text-group {
     flex: 1;
     min-width: 0;
     padding-right: 15px;
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    /* Was center */
+    flex-direction: row; /* Changed to row for checkbox alignment */
+    align-items: center;
     gap: 8px;
 }
 
@@ -326,6 +398,16 @@ canvas {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* NEW: Inactive Skill Style */
+.task-item.inactive-skill {
+    opacity: 0.6;
+    background-color: #f8f9fa;
+}
+.task-item.inactive-skill .task-name {
+    text-decoration: line-through;
+    color: #94A3B8;
 }
 
 .btn-expand {
@@ -338,22 +420,21 @@ canvas {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.2s;
     width: 20px;
     height: 20px;
     margin-right: 5px;
-
-    /* ADDED: Margin top to push arrow down to align with text line */
     margin-top: 3px;
+    transition: all 0.2s ease;
 }
 
 .btn-expand:hover {
     color: var(--electric);
     background: #F0F7FF;
     border-radius: 4px;
+    transform: scale(1.1);
 }
 
-/* NEW: Filter Toggle Header Style */
+/* Filter Toggle Header Style */
 .filter-toggle-header {
     display: flex;
     justify-content: space-between;
@@ -364,12 +445,18 @@ canvas {
     border-radius: 12px;
     cursor: pointer;
     margin-bottom: 10px;
-    transition: 0.2s;
+    transition: all 0.2s ease;
 }
 
 .filter-toggle-header:hover {
     border-color: var(--electric);
     background: #F0F7FF;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.filter-toggle-header:active {
+    transform: translateY(0);
 }
 
 /* Filter Toolbar */
@@ -379,6 +466,7 @@ canvas {
     border: 1px solid var(--border);
     padding: 15px 24px;
     margin-bottom: 20px;
+    transition: all 0.3s ease;
 }
 
 .advanced-filters {
@@ -422,6 +510,12 @@ canvas {
     font-weight: bold;
     cursor: pointer;
     outline: none;
+    transition: all 0.2s ease;
+}
+
+.year-select:hover {
+    background: #F0F7FF;
+    box-shadow: 0 0 0 3px rgba(77, 171, 255, 0.1);
 }
 
 /* Forms & Buttons */
@@ -446,19 +540,31 @@ textarea {
     border-radius: 10px;
     font-size: 1rem;
     background: white;
+    transition: all 0.2s ease;
 }
 
+/* Input Focus Animation */
 input:focus,
 select:focus,
 textarea:focus {
     outline: none;
     border-color: var(--electric);
-    box-shadow: 0 0 0 3px rgba(77, 171, 255, 0.1);
+    box-shadow: 0 0 0 4px rgba(77, 171, 255, 0.15);
+    transform: translateY(-1px);
 }
 
 textarea {
     resize: vertical;
     font-family: inherit;
+}
+
+/* Generic Button Styles */
+button {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+button:active {
+    transform: scale(0.96);
 }
 
 .btn-primary {
@@ -469,11 +575,17 @@ textarea {
     border-radius: 10px;
     font-weight: 600;
     cursor: pointer;
-    transition: 0.2s;
+    box-shadow: 0 2px 5px rgba(77, 171, 255, 0.3);
 }
 
 .btn-primary:hover {
     background: #3a95ea;
+    box-shadow: 0 4px 12px rgba(77, 171, 255, 0.4);
+    transform: translateY(-1px);
+}
+
+.btn-primary:active {
+    transform: translateY(0) scale(0.98);
 }
 
 .btn-secondary {
@@ -484,12 +596,12 @@ textarea {
     border-radius: 8px;
     cursor: pointer;
     font-weight: 600;
-    transition: 0.2s;
 }
 
 .btn-secondary:hover {
     background: #E5E7EB;
     color: #1F2937;
+    border-color: #9CA3AF;
 }
 
 .btn-outline {
@@ -499,17 +611,28 @@ textarea {
     padding: 10px;
     border-radius: 8px;
     cursor: pointer;
-    transition: 0.2s;
 }
 
 .btn-outline:hover {
     border-color: var(--electric);
     color: var(--electric);
+    background: rgba(255, 255, 255, 0.05);
 }
 
 .btn-sm {
     padding: 8px 12px;
     font-size: 0.85rem;
+}
+
+.btn-reset {
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #ccc;
+}
+
+.btn-reset:hover {
+    border-color: var(--danger);
+    color: var(--danger);
+    background: rgba(239, 68, 68, 0.1);
 }
 
 .filter-btn {
@@ -518,13 +641,20 @@ textarea {
     padding: 8px 16px;
     border-radius: 20px;
     cursor: pointer;
-    transition: 0.2s;
+    transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+    border-color: var(--electric);
+    color: var(--electric);
+    transform: translateY(-1px);
 }
 
 .filter-btn.active {
     background: var(--navy);
     color: white;
     border-color: var(--navy);
+    box-shadow: 0 2px 5px rgba(26, 28, 50, 0.2);
 }
 
 .action-group {
@@ -532,24 +662,35 @@ textarea {
     gap: 8px;
 }
 
-.btn-edit {
-    color: var(--electric);
-    border: 1px solid var(--electric);
+.btn-edit, .btn-delete {
     background: white;
     padding: 5px 10px;
     border-radius: 6px;
     cursor: pointer;
     font-size: 0.8rem;
+    transition: all 0.2s;
+}
+
+.btn-edit {
+    color: var(--electric);
+    border: 1px solid var(--electric);
+}
+
+.btn-edit:hover {
+    background: #F0F7FF;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .btn-delete {
     color: var(--danger);
     border: 1px solid var(--danger);
-    background: white;
-    padding: 5px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.8rem;
+}
+
+.btn-delete:hover {
+    background: #FEF2F2;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .btn-remove-row {
@@ -561,6 +702,13 @@ textarea {
     border-radius: 6px;
     cursor: pointer;
     font-weight: bold;
+    transition: all 0.2s;
+}
+
+.btn-remove-row:hover {
+    background: var(--danger);
+    color: white;
+    transform: rotate(90deg);
 }
 
 .milestone-row {
@@ -568,6 +716,7 @@ textarea {
     gap: 10px;
     margin-bottom: 10px;
     align-items: center;
+    animation: fadeIn 0.3s ease;
 }
 
 .milestone-row input[type="number"] {
@@ -576,6 +725,24 @@ textarea {
 
 .milestone-row input[type="text"] {
     flex: 1;
+}
+
+/* Back Button - Ghost Style */
+.btn-back { 
+    background: transparent; 
+    border: 1px solid var(--electric); 
+    color: var(--electric);
+    padding: 10px 20px;
+    border-radius: 8px; 
+    cursor: pointer; 
+    font-weight: 600; 
+    display: none; 
+    transition: all 0.2s;
+}
+
+.btn-back:hover { 
+    background: #F0F7FF; 
+    transform: translateX(-3px);
 }
 
 /* Modals */
@@ -587,7 +754,14 @@ textarea {
     justify-content: center;
     align-items: center;
     z-index: 3000;
-    backdrop-filter: blur(2px);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+/* When modal is displayed via JS, it needs opacity 1 */
+.modal[style*="display: flex"] {
+    opacity: 1;
 }
 
 .modal-content {
@@ -599,7 +773,10 @@ textarea {
     overflow-y: auto;
     overflow-x: hidden;
     overscroll-behavior-y: contain;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    
+    /* Animation for modal content */
+    animation: modalEnter 0.4s var(--ease-out);
 }
 
 .modal-footer {
@@ -621,12 +798,19 @@ textarea {
     border-radius: 12px;
     cursor: pointer;
     text-align: left;
-    transition: 0.2s;
+    transition: all 0.2s ease;
+    background: white;
 }
 
 .level-btn:hover {
     border-color: var(--electric);
     background: #F0F7FF;
+    transform: scale(1.02);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.level-btn:active {
+    transform: scale(0.98);
 }
 
 /* --- RELATIONSHIP TREE --- */
@@ -655,12 +839,13 @@ textarea {
     background: white;
     border: 1px solid var(--border);
     cursor: pointer;
-    transition: 0.2s;
+    transition: all 0.2s ease;
 }
 
 .relation-node:hover {
     border-color: var(--electric);
     background: #F0F7FF;
+    transform: translateX(3px);
 }
 
 .relation-node.current {
@@ -668,6 +853,8 @@ textarea {
     color: white;
     border-color: var(--electric);
     cursor: default;
+    transform: none;
+    box-shadow: 0 4px 6px rgba(77, 171, 255, 0.2);
 }
 
 .relation-node.parent {
@@ -706,6 +893,7 @@ textarea {
     height: 100%;
     background: currentColor;
     border-radius: 3px;
+    transition: width 0.5s ease-out;
 }
 
 .relation-node.current .progress-fill {
@@ -723,17 +911,6 @@ textarea {
     margin-bottom: 20px;
 }
 
-.btn-back {
-    background: #E5E7EB;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    font-weight: 600;
-    display: none;
-}
-
 /* --- MOBILE RESPONSIVE --- */
 @media (max-width: 768px) {
     .app-container {
@@ -747,16 +924,11 @@ textarea {
         padding: 15px 20px;
         background: var(--navy);
         color: white;
-
-        /* CHANGE 1: Stop fixing the position. Let it sit in the flex flow. */
         position: relative;
-        /* Was fixed */
         flex-shrink: 0;
-        /* Don't let it squash */
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         height: 70px;
         z-index: 2000;
-        /* Keep this high for the shadow */
     }
 
     .mobile-header .logo-area {
@@ -769,6 +941,11 @@ textarea {
         color: white;
         font-size: 1.5rem;
         cursor: pointer;
+        transition: transform 0.2s;
+    }
+    
+    .mobile-menu-btn:active {
+        transform: scale(0.9);
     }
 
     .sidebar {
@@ -785,52 +962,21 @@ textarea {
     .sidebar.mobile-open {
         left: 0;
     }
+    
+    .sidebar.collapsed { width: 280px !important; }
+    .sidebar.collapsed .logo-text, .sidebar.collapsed .nav-text, .sidebar.collapsed .storage-actions button span { display: inline-block !important; }
+    .sidebar.collapsed .nav-links li { text-align: left !important; padding: 12px 16px !important; justify-content: flex-start !important; }
+    .sidebar.collapsed .icon { margin: 0 !important; width: 24px; text-align: center; }
+    .sidebar.collapsed .storage-actions .btn-outline { justify-content: flex-start !important; padding: 10px !important; }
+    .sidebar-toggle { display: none !important; } 
+    .desktop-logo { display: none !important; }
 
-    .sidebar.collapsed {
-        width: 280px !important;
-    }
-
-    .sidebar.collapsed .logo-text,
-    .sidebar.collapsed .nav-text,
-    .sidebar.collapsed .storage-actions button span {
-        display: inline-block !important;
-    }
-
-    .sidebar.collapsed .nav-links li {
-        text-align: left !important;
-        padding: 12px 16px !important;
-        justify-content: flex-start !important;
-    }
-
-    .sidebar.collapsed .icon {
-        margin: 0 !important;
-        width: 24px;
-        text-align: center;
-    }
-
-    .sidebar.collapsed .storage-actions .btn-outline {
-        justify-content: flex-start !important;
-        padding: 10px !important;
-    }
-
-    .sidebar-toggle {
-        display: none !important;
-    }
-
-    .desktop-logo {
-        display: none !important;
-    }
-
-    /* Inside @media (max-width: 768px) */
     .content {
         flex: 1;
         position: relative;
-        /* CRITICAL: Creates a boundary for the child */
         width: 100%;
         overflow: hidden;
-        /* Ensures no double scrollbars */
         margin-top: 0;
-        /* Remove 'height' properties here, they confuse Safari */
     }
 
     .sticky-header {
@@ -847,6 +993,7 @@ textarea {
         inset: 0;
         background: rgba(0, 0, 0, 0.5);
         z-index: 2400;
+        animation: fadeIn 0.3s;
     }
 
     .dashboard-grid {
@@ -881,43 +1028,35 @@ textarea {
     }
 
     .modal-content {
-        width: 95%;
+        width: 100%;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
         padding: 20px;
+        animation: modalEnter 0.4s ease-out; /* Slower animation for full screen */
     }
 
     .filter-row {
         flex-direction: column;
     }
 
-    /* Inside @media (max-width: 768px) */
     .page-view {
         position: absolute !important;
-        /* Forces it to stay inside .content */
         top: 0;
         left: 0;
         width: 100%;
         height: 100% !important;
-        /* Forces it to match the parent height exactly */
-
-        /* Fix for iOS bottom bar covering content */
         padding-bottom: env(safe-area-inset-bottom);
     }
-
-    /* Inside @media (max-width: 768px) { ... } */
-
-    .modal-content {
-        width: 100%;
-        /* Full width */
-        height: 100vh;
-        /* Full height */
-        max-height: 100vh;
-        /* Override the 90vh limit */
-        border-radius: 0;
-        /* Remove rounded corners for full-screen feel */
-        padding: 20px;
-        /* Adjust padding for mobile */
+    
+    /* Mobile Controls Row */
+    .controls-row { 
+        flex-direction: column; 
+        align-items: stretch; 
     }
-
+    .control-group-left { 
+        justify-content: space-between; 
+    }
 }
 
 .child-link-btn {
@@ -929,25 +1068,55 @@ textarea {
     transform: translateX(5px);
 }
 
-/* Ensure modal text area toggles visibility correctly */
 #update-note-input {
     width: 100%;
     margin-bottom: 15px;
 }
 
-html,
-body,
-.app-container {
-    height: 100vh;
-    height: -webkit-fill-available;
-    /* Fills the visible area specifically for Safari */
-    margin: 0;
-    overflow: hidden;
+/* --- NEW STYLES FOR MULTI-SELECT & CONTROLS --- */
+
+.controls-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 15px;
 }
 
-.page-view {
-    display: none;
-    /* Default state */
-    flex-direction: column;
-    height: 100%;
+.control-group-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.bulk-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: fadeIn 0.2s;
+}
+
+.separator {
+    color: #CBD5E1;
+    font-weight: 300;
+}
+
+/* Checkbox Style */
+.selection-checkbox {
+    width: 18px;
+    height: 18px;
+    margin-right: 12px;
+    cursor: pointer;
+    accent-color: var(--electric);
+    transition: transform 0.2s;
+}
+.selection-checkbox:checked { 
+    transform: scale(1.1); 
+}
+
+html, body, .app-container {
+    height: 100vh;
+    height: -webkit-fill-available;
+    margin: 0;
+    overflow: hidden;
 }

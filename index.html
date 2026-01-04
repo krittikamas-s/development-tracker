@@ -129,17 +129,16 @@
 
             <section id="skills" class="page-view" style="display:none;">
                 <div class="sticky-header">
-                    <div class="view-header">
+                    <div class="view-header" style="margin-bottom:10px;">
                         <h1>Manage Skills Area</h1>
-                        <button class="btn-primary" style="width:auto;" onclick="openAddSkillModal()">+ Add New Skill</button>
-                    </div>
+                        </div>
                     
                     <div class="filter-toggle-header" onclick="toggleFilters()">
                         <span style="font-weight:600; color:#64748B;">Search & Filters</span>
-                        <span id="filter-toggle-icon" style="color:#64748B;">▼</span>
+                        <span id="filter-toggle-icon" style="color:#64748B;">▶</span>
                     </div>
 
-                    <div id="filter-panel" class="filter-toolbar advanced-filters">
+                    <div id="filter-panel" style="display: none;" class="filter-toolbar advanced-filters">
                         <div class="filter-row">
                             <div class="filter-group" style="flex:2;">
                                 <label>Search Name</label>
@@ -151,6 +150,14 @@
                                     <option value="all">Show All</option>
                                     <option value="parents">Top Level Only</option>
                                     <option value="children">Sub-skills Only</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>Status</label>
+                                <select id="skillsStatusFilter" onchange="renderSkillsManageList()">
+                                    <option value="active" selected>Active Only</option>
+                                    <option value="inactive">Inactive / Archived</option>
+                                    <option value="all">Show All</option>
                                 </select>
                             </div>
                         </div>
@@ -173,6 +180,21 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="controls-row">
+                        <div class="control-group-left">
+                            <button id="btn-select-mode" class="btn-secondary btn-sm" onclick="toggleSelectionMode()">
+                                <span>☑ Select</span>
+                            </button>
+                            <div id="bulk-actions" class="bulk-actions" style="display:none;">
+                                <span class="separator">|</span>
+                                <button class="btn-outline btn-sm" onclick="massArchive()" style="color:#64748B;">Archive</button>
+                                <button class="btn-outline btn-sm" onclick="massDelete()" style="color:var(--danger); border-color:var(--danger);">Delete</button>
+                            </div>
+                        </div>
+
+                        <button class="btn-primary" onclick="openAddSkillModal()">+ Add New Skill</button>
+                    </div>
                 </div>
 
                 <div class="scrollable-body">
@@ -187,7 +209,6 @@
     <div id="skillEntryModal" class="modal">
         <div class="modal-content">
             <div class="modal-header-row">
-                <button id="modal-back-btn" class="btn-back" onclick="navigateBack()">← Back</button>
                 <h2 id="entryModalTitle" style="margin:0;">Add New Skill</h2>
             </div>
 
@@ -206,6 +227,11 @@
                 <select id="skill-parent-input">
                     <option value="">None (Top Level)</option>
                 </select>
+            </div>
+            
+            <div id="reactivate-section" class="form-group" style="display:none; padding:10px; background:#f0fdf4; border:1px solid #22c55e; border-radius:8px;">
+                 <label style="color:#15803d; margin-bottom:5px;">This skill is archived.</label>
+                 <button class="btn-secondary btn-sm" onclick="reactivateCurrentSkill()">Restore to Active</button>
             </div>
             
             <div id="sub-skill-section" class="form-group" style="border:1px dashed var(--electric); padding:10px; border-radius:10px; background:#F0F7FF; display:none;">
@@ -227,6 +253,7 @@
             </div>
 
             <div class="modal-footer">
+                <button id="modal-back-btn" class="btn-back" onclick="navigateBack()">← Back</button>
                 <button class="btn-primary" onclick="saveSkillData()">Save & Close</button>
                 <button class="btn-secondary" onclick="closeEntryModal()">Cancel</button>
             </div>
@@ -236,15 +263,12 @@
     <div id="updateModal" class="modal">
         <div class="modal-content">
             <h2 id="modalSkillName">Skill Name</h2>
-            
             <div class="form-group">
                 <label>Current Status Note</label>
                 <textarea id="update-note-input" rows="3" placeholder="e.g., Currently running 4.5km, felt strong..."></textarea>
             </div>
-
             <p style="margin-bottom:10px; color:#666; font-size:0.9rem;">Tap a level to update progress:</p>
             <div id="levelOptions" class="level-grid"></div>
-            
             <div class="modal-footer">
                 <button class="btn-secondary" onclick="closeModal()">Close</button>
             </div>
